@@ -139,8 +139,7 @@ class FoundationScript(Script):
             node_info["ipmi_ip"] = ipmi_ip
             node_info["ipmi_gateway"] = (node.get("ipmi_gateway") or network.get("ipmi_gateway") or
                                          node_info.get("ipmi_gateway"))
-            node_info["ipmi_netmask"] = get_subnet_mask(subnet=node.get("ipmi_gateway") or network.get("ipmi_gateway") or
-                                         node_info.get("ipmi_gateway"))
+            node_info["ipmi_netmask"] = get_subnet_mask(subnet=network["ipmi_subnet"]) if network.get("ipmi_subnet") else node_info.get("ipmi_netmask")
             if network_bond_settings:
                 node_info["network_bond_settings"] = network_bond_settings
         return existing_node_detail_dict, None
