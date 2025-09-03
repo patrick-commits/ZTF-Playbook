@@ -45,6 +45,24 @@ WORKFLOW_CONFIG = {
         "post_run_actions": [generate_html_from_json, save_pod_logs],
         "scripts": [FoundationScript]
     },
+    "cluster-create":{
+        "schema": CLUSTER_CREATE_SCHEMA,
+        "pre_run_actions": [create_ipam_object, create_pc_objects],
+        "post_run_actions": [generate_html_from_json, save_logs],
+        "scripts": [CreateCluster]
+    },
+    "imaging-only": {
+        "schema": IMAGING_ONLY_SCHEMA,
+        "pre_run_actions": [create_ipam_object, create_pc_objects],
+        "post_run_actions": [generate_html_from_json, save_logs],
+        "scripts": [Imaging]
+    },
+    "site-deploy": {
+        "schema": SITE_DEPLOY_SCHEMA,
+        "pre_run_actions": [create_pe_objects, create_pc_objects],
+        "post_run_actions": [generate_html_from_json, save_logs],
+        "scripts": [FoundationScript]
+    },
     "config-cluster": {
         "schema": CLUSTER_SCHEMA,
         "pre_run_actions": [create_pe_objects, create_pc_objects],
@@ -87,6 +105,7 @@ WORKFLOW_CONFIG = {
         "post_run_actions": [generate_html_from_json, save_pod_logs],
         "scripts": [ConfigManagementPlane]
     },
+    
     "ndb": {
         "schema": NDB_SCHEMA,
         "post_run_actions": [generate_html_from_json, save_logs],

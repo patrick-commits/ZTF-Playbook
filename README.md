@@ -55,6 +55,31 @@ is used to deploy and manage infrastructure at scale. In this design, a **_Pod_*
 **_blocks (pod_blocks)_** and each **_block (pod_block)_** can manage multiple **_edge_sites_** and each **_edge_site_**
 can manage multiple **_clusters_** at the edge.
 
+- `cluster-create`
+    - This workflow is used to **Create Clusters** using Foundation Central. An example Config is provided 
+      in [config/example-configs/workflow-configs/create_cluster.yml]. Copy this into the **config** directory, modify
+      the configuration and then run this workflow using the command below inside **virtualenv**
+      ```sh
+      python main.py --workflow cluster-create -f config/cluster-create.yml
+      ```
+- `imaging-only`
+    - This workflow is used to **Image Nodes** using Foundation Central (without having to create Cluster). An
+      example Config is provided in [config/example-configs/workflow-configs/imaging_only.yml]. Copy this 
+      into the **config** directory, modify the configuration and then run this workflow using the 
+      command below inside **virtualenv**
+      ```sh
+      python main.py --workflow imaging-only -f config/imaging-only.yml
+      ```
+- `site-deploy`
+    - This workflow is used to **Deploy Sites**, each Site consisting of **Clusters** including the
+      Imaging and Cluster Creation using Foundation Central. An example Config is provided
+      in [config/example-configs/pod-configs/sites-deploy.yml](config/example-configs/workflow-configs/sites-deploy.yml).
+      Copy
+      this to the **config** directory, modify the configuration and then run this workflow using the command below
+      inside **virtualenv**.
+      ```sh
+      python main.py --workflow sites-deploy -f config/sites-deploy.yml
+      ```
 - `imaging`
     - This is a **_Pod_** workflow.
     - This workflow is used to **Image the nodes** using Foundation Central and **create Clusters**. An example config
@@ -163,88 +188,98 @@ the framework expects `SCRIPT`, `SCHEMA` and `FILE` parameters to run the specif
 optional. `SCHEMA` if specified verifies the correctness of input configuration.
 Below is the list of supported scripts available.
 
-| Script                       | Operation                                         | Example config                                                                                           |
-|:-----------------------------|:--------------------------------------------------|:---------------------------------------------------------------------------------------------------------|
-| AddAdServerPe                | Adds Active Directory in PE                       | [authentication_pe.yml](config/example-configs/script-configs/authentication_pe.yml)                     |
-| AddAdServerPc                | Adds Active Directory in PC                       | [add_ad_server_pc.py](config/example-configs/script-configs/authentication_pc.yml)                       |
-| AddAdUsersOss                | Adds AdUsers in Objects                           | [directory_services_oss.yml](config/example-configs/script-configs/directory_services_oss.yml)           |
-| AddDirectoryServiceOss       | Adds Active Directory in Objects                  | [directory_services_oss.yml](config/example-configs/script-configs/directory_services_oss.yml)           |
-| AddNameServersPc             | Adds nameservers in PC                            | [dns_ntp_pc.yml](config/example-configs/script-configs/dns_ntp_pc.yml)                                   |
-| AddNameServersPe             | Adds nameservers in PE                            | [dns_ntp_pe.yml](config/example-configs/script-configs/dns_ntp_pe.yml)                                   |
-| AddNtpServersPc              | Adds NTP servers in PC                            | [dns_ntp_pc.yml](config/example-configs/script-configs/dns_ntp_pc.yml)                                   |
-| AddNtpServersPe              | Adds NTP servers in PE                            | [dns_ntp_pe.yml](config/example-configs/script-configs/dns_ntp_pe.yml)                                   |
-| ConnectToAz                  | Connects to AZs                                   | [remote_az.yml](config/example-configs/script-configs/remote_az.yml)                                     |
-| CreateAddressGroups          | Creates Address Groups in PC                      | [address_groups_pc.yml](config/example-configs/script-configs/address_groups_pc.yml)                     |
-| CreateBuckets                | Creates buckets in an Objectstore                 | [objectstore_buckets.yml](config/example-configs/script-configs/objectstore_buckets.yml)                 |
-| CreateAppFromDsl             | Creates Calm Application from calm dsl            | [create-vm-workloads.yml](config/example-configs/workflow-configs/create-vm-workloads.yml)               |
-| CreateNcmProject             | Creates Calm projects                             | [create-vm-workloads.yml](config/example-configs/workflow-configs/create-vm-workloads.yml)               |
-| CreateContainerPe            | Creates Storage container in PE                   | [storage_container_pe.yml](config/example-configs/script-configs/storage_container_pe.yml)               |
-| CreateKarbonClusterPc        | Creates NKE Clusters in PC                        | [nke_clusters.yml](config/example-configs/script-configs/nke_clusters.yml)                               |
-| CreateObjectStore            | Creates Objectstores in PC                        | [objectstore_buckets.yml](config/example-configs/script-configs/objectstore_buckets.yml)                 |
-| CreateCategoryPc             | Creates Categories in PC                          | [category_pc.yml](config/example-configs/script-configs/category_pc.yml)                                 |
-| CreateSubnetsPc              | Creates subnets in PC                             | [subnets_pc.yml](config/example-configs/script-configs/subnets_pc.yml)                                   |
-| CreateProtectionPolicy       | Creates ProtectionPolicy in PC                    | [protection_policy.yml](config/example-configs/script-configs/protection_policy.yml)                     |
-| CreateRecoveryPlan           | Creates RecoveryPlan in PC                        | [recovery_plan.yml](config/example-configs/script-configs/recovery_plan.yml)                             |
-| CreateRoleMappingPe          | Creates Role mapping in PE                        | [authentication_pe.yml](config/example-configs/script-configs/authentication_pe.yml)                     |
-| CreateRoleMappingPc          | Creates Role mapping in PC                        | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                     |
-| CreateNetworkSecurityPolicy  | Creates Security policies in PC                   | [security_policy.yml](config/example-configs/script-configs/security_policy.yml)                         |
-| CreateNcmAccount             | Creates NTNX PC account in NCM                    | [ncm_account_users.yml](config/example-configs/script-configs/ncm_account_users.yml)                     |
-| CreateNcmUser                | Creates users in NCM                              | [ncm_account_users.yml](config/example-configs/script-configs/ncm_account_users.yml)                     |
-| CreateServiceGroups          | Creates Service Groups in PC                      | [service_groups.yml](config/example-configs/script-configs/service_groups.yml)                           |
-| CreateVmPe                   | Creates VMs in PE                                 | [create_vms_pe.yml](config/example-configs/script-configs/vm.yml)                                        |
-| CreateVPC                    | Creates VPC in PC                                 | [vpcs.yml](config/example-configs/script-configs/vpcs.yml)                                               |
-| EnableDR                     | Enables DR in PC                                  | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| EnableMicrosegmentation      | Enables Flow in PC                                | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| EnableNke                    | Enables Karbon/ NKE in PC                         | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| EnableObjects                | Enables Objects in PC                             | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| Enable Network Controller    | Enables Network Controller in PC                  | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| InitCalmDsl                  | Initialize calm dsl                               | [create-vm-workloads.yml](config/example-configs/workflow-configs/create-vm-workloads.yml)               |
-| ChangeDefaultAdminPasswordPe | Change PE admin password                          | [initial_cluster_config.yml](config/example-configs/script-configs/initial_cluster_config.yml)           |
-| AcceptEulaPe                 | Accept Eula PE                                    | [initial_cluster_config.yml](config/example-configs/script-configs/initial_cluster_config.yml)           |
-| UpdatePulsePe                | Update Pulse PE                                   | [initial_cluster_config.yml](config/example-configs/script-configs/initial_cluster_config.yml)           |
-| ChangeDefaultAdminPasswordPc | Change PC password                                | [initial_pc_config.yml](config/example-configs/script-configs/initial_pc_config.yml)                     |
-| UploadImagePe                | Uploads images to PE cluster                      | [image_upload_pe.yml](config/example-configs/script-configs/vm.yml)                                      |
-| PowerTransitionVmPe          | Power Transition VMs in PE                        | [power_transition_pe.yml](config/example-configs/script-configs/vm.yml)                                  |
-| AcceptEulaPc                 | Accept Eula PC                                    | [initial_pc_config.yml](config/example-configs/script-configs/initial_pc_config.yml)                     |
-| UpdatePulsePc                | Update Pulse PC                                   | [initial_pc_config.yml](config/example-configs/script-configs/initial_pc_config.yml)                     |
-| PcImageUpload                | Uploads images to PC clusters                     | [pc_image.yml](config/example-configs/script-configs/pc_image.yml)                                       |
-| PcOVAUpload                  | Uploads OVAs to PC clusters                       | [pc_ova.yml](config/example-configs/script-configs/pc_ova.yml)                                           |
-| RegisterToPc                 | Registers clusters to PC                          | [register_to_pc.yml](config/example-configs/script-configs/register_to_pc.yml)                           |
-| ShareBucket                  | Shares a bucket with a list of users              | [objectstore_buckets.yml](config/example-configs/script-configs/objectstore_buckets.yml)                 |
-| UpdateDsip                   | Updates DSIP in PE                                | [update_dsip.yml](config/example-configs/script-configs/update_dsip.yml)                                 |
-| EnableFC                     | Enables Foundation Central in FC                  | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| GenerateFcApiKey             | Generates Foundation Central API Key              | [generate_fc_api_key.yml](config/example-configs/script-configs/generate_fc_api_key.yml)                 |
-| DeleteSubnetsPc              | Delete Subnets in PC                              | [subnets_pc.yml](config/example-configs/script-configs/delete_subnets_pc.yml)                            |
-| DeleteSubnetsPe              | Delete Subnets in PE                              | [subnets_pe.yml](config/example-configs/script-configs/delete_subnets_pc.yml)                            |
-| DeleteAdServerPc             | Delete Active Directory in PC                     | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                     |
-| DeleteAdServerPe             | Delete Active Directory in PE                     | [authentication_pe.yml](config/example-configs/script-configs/authentication_pe.yml)                     |
-| DeleteAddressGroups          | Delete Address Groups in PC                       | [address_groups_pc.yml](config/example-configs/script-configs/address_groups_pc.yml)                     |
-| DeleteNameServersPc          | Delete Name Servers in PC                         | [dns_ntp_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                            |
-| DeleteNameServersPe          | Delete Name Servers in PE                         | [dns_ntp_pe.yml](config/example-configs/script-configs/authentication_pc.yml)                            |
-| DeleteNtpServersPc           | Delete NTP Servers in PC                          | [dns_ntp_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                            |
-| DeleteNtpServersPe           | Delete NTP Servers in PE                          | [dns_ntp_pe.yml](config/example-configs/script-configs/authentication_pc.yml)                            |
-| DeleteCategoryPc             | Delete Categories in PC                           | [category_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                           |
-| DeleteProtectionPolicy       | Delete Protection Policies in PC                  | [protection_policy.yml](config/example-configs/script-configs/protection_policy.yml)                     |
-| DeleteRecoveryPlan           | Delete Recovery Plans in PC                       | [recovery_plan.yml](config/example-configs/script-configs/recovery_plan.yml)                             |
-| DeleteRoleMappingPc          | Delete Role Mappings in PC                        | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                     |
-| DeleteRoleMappingPe          | Delete Role Mappings in PE                        | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                     |
-| DeleteNetworkSecurityPolicy  | Delete Security Policies in PC                    | [security_policy.yml](config/example-configs/script-configs/security_policy.yml)                         |
-| DeleteServiceGroups          | Delete Service Groups in PC                       | [service_groups.yml](config/example-configs/script-configs/service_groups.yml)                           |
-| DeleteVmPc                   | Delete VMs in PC                                  | [delete_vms_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                         |
-| DeleteVmPe                   | Delete VMs in PE                                  | [delete_vms_pe.yml](config/example-configs/script-configs/authentication_pc.yml)                         |
-| DeleteVPC                    | Delete VPCs in PC                                 | [vpcs.yml](config/example-configs/script-configs/vpcs.yml)                                               |
-| DisconnectAz                 | Disconnects Availability Zones in PC              | [remote_az.yml](config/example-configs/script-configs/remote_az.yml)                                     |
-| DisableNetworkController     | Disabe Network Controller in PC                   | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                       |
-| PcImageDelete                | Delete Images in PC                               | [pc_image.yml](config/example-configs/script-configs/pc_image.yml)                                       |
-| PcOVADelete                  | Delete OVAs in PC                                 | [pc_ova.yml](config/example-configs/script-configs/pc_ova.yml)                                           |
-| CreateIdp                    | Create SAML2 compliant Identity Provider in PC    | [saml_idp.yml](config/example-configs/script-configs/saml_idp.yml)                                       |
-| UpdateCvmFoundation          | Update CVM Foundation Version                     | [update_cvm_foundation.yml](config/example-configs/script-configs/update_cvm_foundation.yml)             |
-| UpdateAddressGroups          | Update Address Groups in PC                       | [address_groups_pc.yml](config/example-configs/script-configs/address_groups_pc.yml)                     |
-| UpdateServiceGroups          | Update Service Groups in PC                       | [service_groups.yml](config/example-configs/script-configs/service_groups.yml)                           |
-| UpdateNetworkSecurityPolicy  | Update Network Security Policy in PC              | [security_policy_next_gen.yml](config/example-configs/script-configs/security_policy_next_gen.yml)       |
-| UpdateVPC                    | Update VPC in PC                                  | [vpcs.yml](config/example-configs/script-configs/vpcs.yml)                                               |
-| HaReservation                | Enable/Disable HA Reservation in PE               | [ha.yml](config/example-configs/script-configs/ha.yml)                                                   |
-| RebuildCapacityReservation   | Enable/Disable Rebuild Capacity Reservation in PE | [rebuild_capcity_reservation.yml](config/example-configs/script-configs/rebuild_capcity_reservation.yml) |
+| Script                       | Operation                                         | Example config                                                                                            |
+|:-----------------------------|:--------------------------------------------------|:----------------------------------------------------------------------------------------------------------|
+| AddAdServerPe                | Adds Active Directory in PE                       | [authentication_pe.yml](config/example-configs/script-configs/authentication_pe.yml)                      |
+| AddAdServerPc                | Adds Active Directory in PC                       | [add_ad_server_pc.py](config/example-configs/script-configs/authentication_pc.yml)                        |
+| AddAdUsersOss                | Adds AdUsers in Objects                           | [directory_services_oss.yml](config/example-configs/script-configs/directory_services_oss.yml)            |
+| AddNameServersPc             | Adds nameservers in PC                            | [dns_ntp_pc.yml](config/example-configs/script-configs/dns_ntp_pc.yml)                                    |
+| AddNameServersPe             | Adds nameservers in PE                            | [dns_ntp_pe.yml](config/example-configs/script-configs/dns_ntp_pe.yml)                                    |
+| AddNtpServersPc              | Adds NTP servers in PC                            | [dns_ntp_pc.yml](config/example-configs/script-configs/dns_ntp_pc.yml)                                    |
+| AddNtpServersPe              | Adds NTP servers in PE                            | [dns_ntp_pe.yml](config/example-configs/script-configs/dns_ntp_pe.yml)                                    |
+| ConnectToAz                  | Connects to AZs                                   | [remote_az.yml](config/example-configs/script-configs/remote_az.yml)                                      |
+| CreateAddressGroups          | Creates Address Groups in PC                      | [address_groups_pc.yml](config/example-configs/script-configs/address_groups_pc.yml)                      |
+| CreateBuckets                | Creates buckets in an Objectstore                 | [objectstore_buckets.yml](config/example-configs/script-configs/objectstore_buckets.yml)                  |
+| CreateAppFromDsl             | Creates Calm Application from calm dsl            | [create-vm-workloads.yml](config/example-configs/workflow-configs/create-vm-workloads.yml)                |
+| CreateNcmProject             | Creates Calm projects                             | [create-vm-workloads.yml](config/example-configs/workflow-configs/create-vm-workloads.yml)                |
+| CreateContainerPe            | Creates Storage container in PE                   | [storage_container_pe.yml](config/example-configs/script-configs/storage_container_pe.yml)                |
+| CreateKarbonClusterPc        | Creates NKE Clusters in PC                        | [nke_clusters.yml](config/example-configs/script-configs/nke_clusters.yml)                                |
+| CreateObjectStore            | Creates Objectstores in PC                        | [objectstore_buckets.yml](config/example-configs/script-configs/objectstore_buckets.yml)                  |
+| CreateCategoryPc             | Creates Categories in PC                          | [category_pc.yml](config/example-configs/script-configs/category_pc.yml)                                  |
+| CreateSubnetsPc              | Creates subnets in PC                             | [subnets_pc.yml](config/example-configs/script-configs/subnets_pc.yml)                                    |
+| CreateProtectionPolicy       | Creates ProtectionPolicy in PC                    | [protection_policy.yml](config/example-configs/script-configs/protection_policy.yml)                      |
+| CreateRecoveryPlan           | Creates RecoveryPlan in PC                        | [recovery_plan.yml](config/example-configs/script-configs/recovery_plan.yml)                              |
+| CreateRoleMappingPe          | Creates Role mapping in PE                        | [authentication_pe.yml](config/example-configs/script-configs/authentication_pe.yml)                      |
+| CreateRoleMappingPc          | Creates Role mapping in PC                        | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                      |
+| CreateNetworkSecurityPolicy  | Creates Security policies in PC                   | [security_policy.yml](config/example-configs/script-configs/security_policy.yml)                          |
+| CreateNcmAccount             | Creates NTNX PC account in NCM                    | [ncm_account_users.yml](config/example-configs/script-configs/ncm_account_users.yml)                      |
+| CreateNcmUser                | Creates users in NCM                              | [ncm_account_users.yml](config/example-configs/script-configs/ncm_account_users.yml)                      |
+| CreateServiceGroups          | Creates Service Groups in PC                      | [service_groups.yml](config/example-configs/script-configs/service_groups.yml)                            |
+| CreateVmPe                   | Creates VMs in PE                                 | [create_vms_pe.yml](config/example-configs/script-configs/vm.yml)                                         |
+| CreateVPC                    | Creates VPC in PC                                 | [vpcs.yml](config/example-configs/script-configs/vpcs.yml)                                                |
+| CreateVmsPc                  | Creates VMs in PC                                 | [vpcs.yml](config/example-configs/script-configs/vms_pc.yml)                                              |
+| EnableDR                     | Enables DR in PC                                  | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| EnableMicrosegmentation      | Enables Flow in PC                                | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| EnableNke                    | Enables Karbon/ NKE in PC                         | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| EnableObjects                | Enables Objects in PC                             | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| Enable Network Controller    | Enables Network Controller in PC                  | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| InitCalmDsl                  | Initialize calm dsl                               | [create-vm-workloads.yml](config/example-configs/workflow-configs/create-vm-workloads.yml)                |
+| ChangeDefaultAdminPasswordPe | Change PE admin password                          | [initial_cluster_config.yml](config/example-configs/script-configs/initial_cluster_config.yml)            |
+| AcceptEulaPe                 | Accept Eula PE                                    | [initial_cluster_config.yml](config/example-configs/script-configs/initial_cluster_config.yml)            |
+| UpdatePulsePe                | Update Pulse PE                                   | [initial_cluster_config.yml](config/example-configs/script-configs/initial_cluster_config.yml)            |
+| ChangeDefaultAdminPasswordPc | Change PC password                                | [initial_pc_config.yml](config/example-configs/script-configs/initial_pc_config.yml)                      |
+| UploadImagePe                | Uploads images to PE cluster                      | [image_upload_pe.yml](config/example-configs/script-configs/vm.yml)                                       |
+| PowerTransitionVmPe          | Power Transition VMs in PE                        | [power_transition_pe.yml](config/example-configs/script-configs/vm.yml)                                   |
+| AcceptEulaPc                 | Accept Eula PC                                    | [initial_pc_config.yml](config/example-configs/script-configs/initial_pc_config.yml)                      |
+| UpdatePulsePc                | Update Pulse PC                                   | [initial_pc_config.yml](config/example-configs/script-configs/initial_pc_config.yml)                      |
+| PcImageUpload                | Uploads images to PC clusters                     | [pc_image.yml](config/example-configs/script-configs/pc_image.yml)                                        |
+| PcOVAUpload                  | Uploads OVAs to PC clusters                       | [pc_ova.yml](config/example-configs/script-configs/pc_ova.yml)                                            |
+| RegisterToPc                 | Registers clusters to PC                          | [register_to_pc.yml](config/example-configs/script-configs/register_to_pc.yml)                            |
+| ShareBucket                  | Shares a bucket with a list of users              | [objectstore_buckets.yml](config/example-configs/script-configs/objectstore_buckets.yml)                  |
+| UpdateDsip                   | Updates DSIP in PE                                | [update_dsip.yml](config/example-configs/script-configs/update_dsip.yml)                                  |
+| EnableFC                     | Enables Foundation Central in FC                  | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| GenerateFcApiKey             | Generates Foundation Central API Key              | [generate_fc_api_key.yml](config/example-configs/script-configs/generate_fc_api_key.yml)                  |
+| DeleteSubnetsPc              | Delete Subnets in PC                              | [subnets_pc.yml](config/example-configs/script-configs/delete_subnets_pc.yml)                             |
+| DeleteSubnetsPe              | Delete Subnets in PE                              | [subnets_pe.yml](config/example-configs/script-configs/delete_subnets_pc.yml)                             |
+| DeleteAdServerPc             | Delete Active Directory in PC                     | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                      |
+| DeleteAdServerPe             | Delete Active Directory in PE                     | [authentication_pe.yml](config/example-configs/script-configs/authentication_pe.yml)                      |
+| DeleteAddressGroups          | Delete Address Groups in PC                       | [address_groups_pc.yml](config/example-configs/script-configs/address_groups_pc.yml)                      |
+| DeleteNameServersPc          | Delete Name Servers in PC                         | [dns_ntp_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                             |
+| DeleteNameServersPe          | Delete Name Servers in PE                         | [dns_ntp_pe.yml](config/example-configs/script-configs/authentication_pc.yml)                             |
+| DeleteNtpServersPc           | Delete NTP Servers in PC                          | [dns_ntp_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                             |
+| DeleteNtpServersPe           | Delete NTP Servers in PE                          | [dns_ntp_pe.yml](config/example-configs/script-configs/authentication_pc.yml)                             |
+| DeleteCategoryPc             | Delete Categories in PC                           | [category_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                            |
+| DeleteProtectionPolicy       | Delete Protection Policies in PC                  | [protection_policy.yml](config/example-configs/script-configs/protection_policy.yml)                      |
+| DeleteRecoveryPlan           | Delete Recovery Plans in PC                       | [recovery_plan.yml](config/example-configs/script-configs/recovery_plan.yml)                              |
+| DeleteRoleMappingPc          | Delete Role Mappings in PC                        | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                      |
+| DeleteRoleMappingPe          | Delete Role Mappings in PE                        | [authentication_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                      |
+| DeleteNetworkSecurityPolicy  | Delete Security Policies in PC                    | [security_policy.yml](config/example-configs/script-configs/security_policy.yml)                          |
+| DeleteServiceGroups          | Delete Service Groups in PC                       | [service_groups.yml](config/example-configs/script-configs/service_groups.yml)                            |
+| DeleteVmPc                   | Delete VMs in PC                                  | [delete_vms_pc.yml](config/example-configs/script-configs/authentication_pc.yml)                          |
+| DeleteVmPe                   | Delete VMs in PE                                  | [delete_vms_pe.yml](config/example-configs/script-configs/authentication_pc.yml)                          |
+| DeleteVPC                    | Delete VPCs in PC                                 | [vpcs.yml](config/example-configs/script-configs/vpcs.yml)                                                |
+| DisconnectAz                 | Disconnects Availability Zones in PC              | [remote_az.yml](config/example-configs/script-configs/remote_az.yml)                                      |
+| DisableNetworkController     | Disabe Network Controller in PC                   | [pc_creds.yml](config/example-configs/script-configs/pc_creds.yml)                                        |
+| PcImageDelete                | Delete Images in PC                               | [pc_image.yml](config/example-configs/script-configs/pc_image.yml)                                        |
+| PcOVADelete                  | Delete OVAs in PC                                 | [pc_ova.yml](config/example-configs/script-configs/pc_ova.yml)                                            |
+| CreateIdp                    | Create SAML2 compliant Identity Provider in PC    | [saml_idp.yml](config/example-configs/script-configs/saml_idp.yml)                                        |
+| UpdateCvmFoundation          | Update CVM Foundation Version                     | [update_cvm_foundation.yml](config/example-configs/script-configs/update_cvm_foundation.yml)              |
+| UpdateAddressGroups          | Update Address Groups in PC                       | [address_groups_pc.yml](config/example-configs/script-configs/address_groups_pc.yml)                      |
+| UpdateServiceGroups          | Update Service Groups in PC                       | [service_groups.yml](config/example-configs/script-configs/service_groups.yml)                            |
+| UpdateNetworkSecurityPolicy  | Update Network Security Policy in PC              | [security_policy_next_gen.yml](config/example-configs/script-configs/security_policy_next_gen.yml)        |
+| UpdateVPC                    | Update VPC in PC                                  | [vpcs.yml](config/example-configs/script-configs/vpcs.yml)                                                |
+| HaReservation                | Enable/Disable HA Reservation in PE               | [ha.yml](config/example-configs/script-configs/ha.yml)                                                    |
+| RebuildCapacityReservation   | Enable/Disable Rebuild Capacity Reservation in PE | [rebuild_capcity_reservation.yml](config/example-configs/script-configs/rebuild_capacity_reservation.yml) |
+| AddRoles                     | Add Roles in IAM                                  | [roles.yml](config/example-configs/script-configs/roles.yml)                                              |
+| AddUserGroups                | Add IAM User Groups to PC                         | [user_groups.yml](config/example-configs/script-configs/user_groups.yml)                                  |
+| AddLocalUsers                | Add Local Users to PC                             | [users.yml](config/example-configs/script-configs/users.yml)                                              |
+| ImportUsers                  | Import Users to PC (LADP)                         | [users.yml](config/example-configs/script-configs/users.yml)                                              |
+| CreateIAMKeys                | Create IAM Keys in PC                             | [iam_keys.yml](config/example-configs/script-configs/iam_keys.yml)                                        |
+| AddAuthorizationPolicy       | Add Authorization Policies to PC                  | [authorization_policy.yml](config/example-configs/script-configs/authorization_policy.yml)                |
+| AddDirectoryServices         | Add DirectoryService Objects to PC                | [directory_services.yml](config/example-configs/script-configs/directory_services.yml)                    |
+| EnableFC                     | Enable Foundation Central in PC                   | [enable_fc.yml](config/example-configs/script-configs/enable_fc.yml)                                      |
+| GenerateFcApiKey             | Generate API keys in Foundation Central           | [generate_api_keys_fc.yml](config/example-configs/script-configs/generate_api_keys_fc.yml)                |
+| EnableMarketplace            | Enable Marketplace in PC                          | [enable_marketplace.yml](config/example-configs/script-configs/enable_marketplace.yml)                    |
 
 To summarize, the input files can either be **json** or **yaml** files. You can find example configurations in
 [config/example-configs](config/example-configs) directory. Copy the required config file, inside [config](config)

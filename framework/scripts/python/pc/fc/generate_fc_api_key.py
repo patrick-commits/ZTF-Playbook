@@ -39,7 +39,10 @@ class GenerateFcApiKey(Script):
 
                 # Generate new API Key. There is no taskuuid to monitor, it creates the key immediately
                 response = fc_api_key.generate_fc_api_key(alias=self.alias)
-                self.logger.info(response)
+                if not response or not response.get("api_key"):
+                    raise Exception(f"Failed to generate FC API Key. Please check the logs for more details. {response}")
+                self.logger.info("Please save the API Key securely as it will not be shown again.")
+                self.logger.info(f"API KEY: {response['api_key']}")
             else:
                 self.exceptions.append("Alias missing. Provide 'alias' to generate FC API key")
 

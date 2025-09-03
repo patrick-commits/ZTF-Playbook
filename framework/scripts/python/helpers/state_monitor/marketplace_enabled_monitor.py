@@ -3,12 +3,12 @@ from .state_monitor import StateMonitor
 from ..v3.service import Service
 
 
-class ObjectsEnabledMonitor(StateMonitor):
+class MarketPlaceEnableMonitor(StateMonitor):
     """
-    The class to wait for objects service to enable
+    The class to wait for nucalm_lite service to enable
     """
-    DEFAULT_TIMEOUT_IN_SEC = 1800
-    DEFAULT_CHECK_INTERVAL_IN_SEC = 10
+    DEFAULT_TIMEOUT_IN_SEC = 1200
+    DEFAULT_CHECK_INTERVAL_IN_SEC = 60
 
     def __init__(self, pc_session: RestAPIUtil):
         """
@@ -26,8 +26,8 @@ class ObjectsEnabledMonitor(StateMonitor):
           True if in expected state else false
         """
         service = Service(self.session)
-        status = service.get_oss_status()
-        if status == service.ENABLED:
+        status = service.is_marketplace_enabled()
+        if status:
             return None, True
         else:
             return None, False
