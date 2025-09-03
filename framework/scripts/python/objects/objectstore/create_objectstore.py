@@ -24,7 +24,9 @@ class CreateObjectStore(Script):
     def execute(self, **kwargs):
         try:
             os = ObjectStore(self.pc_session)
-            os_list = [object_store.get('name') for object_store in os.list()]
+
+            os_list = [] 
+            os_list = os_list or {object_store.get('name') for object_store in os.list()} 
 
             for object_store_to_create in self.object_stores_to_create:
                 if object_store_to_create["name"] in os_list:

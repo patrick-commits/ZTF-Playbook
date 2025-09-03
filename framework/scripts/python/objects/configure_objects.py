@@ -2,8 +2,8 @@ from copy import deepcopy
 from typing import Optional, Dict
 from framework.scripts.python.pc.enable.enable_objects import EnableObjects
 from framework.scripts.python.objects.objectstore.create_objectstore import CreateObjectStore
-from framework.scripts.python.objects.directory.add_directory_service_oss import AddDirectoryServiceOss
-from framework.scripts.python.objects.directory.add_ad_users_oss import AddAdUsersOss
+from framework.scripts.python.iam.add_directory_services import AddDirectoryServices
+from framework.scripts.python.iam.import_users import ImportUsers
 from framework.scripts.python.objects.buckets.create_bucket import CreateBucket
 from framework.scripts.python.objects.buckets.share_bucket import ShareBucket
 from framework.scripts.python.helpers.batch_script import BatchScript
@@ -39,8 +39,8 @@ class OssConfig(Script):
 
         objects_batch_scripts.add_all([
             CreateObjectStore(self.data, log_file=self.log_file),
-            AddDirectoryServiceOss(self.data, log_file=self.log_file),
-            AddAdUsersOss(self.data, log_file=self.log_file),
+            AddDirectoryServices(self.data, log_file=self.log_file),
+            ImportUsers(self.data, log_file=self.log_file),
             CreateBucket(self.data, log_file=self.log_file),
             ShareBucket(self.data, log_file=self.log_file)
         ])

@@ -1,3 +1,4 @@
+import time
 from typing import Dict
 from framework.scripts.python.helpers.v1.genesis import Genesis
 from framework.scripts.python.helpers.state_monitor.fc_enabled_monitor import FcEnabledMonitor
@@ -20,6 +21,9 @@ class EnableFC(Script):
 
     def execute(self, **kwargs):
         try:
+            if self.data.get("enable_fc") is False:
+                self.logger.info("Skipping enabling Foundation Central as per user request")
+                return
             genesis = Genesis(self.pc_session)
             status, _ = genesis.is_fc_enabled()
 
@@ -40,6 +44,7 @@ class EnableFC(Script):
                         "timeframe")
                 else:
                     self.logger.info(f"Enabled Foundation Central service in the PC {self.data['pc_ip']!r}")
+                    time.sleep(30)  # wait for a while to let the service stabilize
         except Exception as e:
             self.exceptions.append(e)
 

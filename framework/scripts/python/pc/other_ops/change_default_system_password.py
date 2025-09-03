@@ -1,7 +1,7 @@
 import time
 from typing import Dict
 from framework.helpers.rest_utils import RestAPIUtil
-from framework.scripts.python.helpers.v1.utils_manager import UtilsManager
+from framework.scripts.python.helpers.iam_v1.user import IamUser
 from framework.scripts.python.helpers.v2.cluster import Cluster as PcCluster
 from framework.helpers.log_utils import get_logger
 from framework.helpers.helper_functions import read_creds
@@ -27,13 +27,11 @@ class ChangeDefaultAdminPasswordPc(Script):
         self.logger = self.logger or logger
 
     def change_default_password(self, old_password: str, new_pc_password: str):
-        default_system_password = UtilsManager(self.default_pc_session)
-        response = default_system_password.change_default_system_password(old_password, new_pc_password)
-
-        if response.get("value"):
-            self.logger.info(f"Default System password updated with new password the PC {self.data['pc_ip']!r}")
-        else:
-            raise Exception(f"Could not change the PC password {self.data['pc_ip']!r}. Error: {response}")
+        default_system_password = IamUser(self.default_pc_session)
+        try:
+            default_system_password.change_default_admin_password(old_password, new_pc_password)
+        except Exception as e:
+            raise Exception(f"Could not change the PC password {self.data['pc_ip']!r}. Error: {e}")
         # Waiting for password sync
         time.sleep(30)
 
