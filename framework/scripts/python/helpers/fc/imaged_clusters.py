@@ -122,7 +122,12 @@ class ImagedCluster(FcEntity):
             "cvm_ntp_servers": [],
             "hypervisor_ntp_servers": [],
         }
-
+        if cnsettings.get("dns_servers"):
+            spec["cvm_dns_servers"] = cnsettings["dns_servers"]
+            spec["hypervisor_dns_servers"] = cnsettings["dns_servers"]
+        if cnsettings.get("ntp_servers"):
+            spec["cvm_ntp_servers"] = cnsettings["ntp_servers"]
+            spec["hypervisor_ntp_servers"] = cnsettings["ntp_servers"]
         for k in default_spec:
             v = cnsettings.get(k)
             if v:
@@ -202,7 +207,7 @@ class ImagedCluster(FcEntity):
             if not cluster_info.get("use_existing_network_settings", cluster_info["use_existing_network_settings"]):
                 node_spec = {
                     "rdma_passthrough": cluster_info.get("rdma_passthrough", False),
-                    "hypervisor_type": cluster_info["imaging_parameters"]["hypervisor_type"],
+                    "hypervisor_type": (cluster_info.get("imaging_parameters"),{}).get("hypervisor_type") or None,
                     "image_now": cluster_info.get("re-image", False),
                     "use_existing_network_settings": False
                 }

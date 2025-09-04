@@ -21,12 +21,13 @@ class CreateSubnetPe(ClusterScript):
             self.set_current_thread_name(cluster_ip)
 
         pe_session = cluster_details["pe_session"]
+        v4_api_util = cluster_details["v4_api_util"]
         cluster_info = f"{cluster_ip}/ {cluster_details['cluster_info']['name']}" if (
                 'name' in cluster_details['cluster_info']) else f"{cluster_ip}"
 
         try:
             if cluster_details.get("networks"):
-                network_op = Network(session=pe_session)
+                network_op = Network(session=pe_session, v4_api_util=v4_api_util)
 
                 for network_to_create in cluster_details["networks"]:
                     try:
@@ -54,9 +55,8 @@ class CreateSubnetPe(ClusterScript):
                 return
 
             self.results["clusters"][cluster_ip] = {"Create_Network": {}}
-            pe_session = cluster_details["pe_session"]
 
-            network_obj = Network(pe_session)
+            network_obj = Network(session = cluster_details["pe_session"], v4_api_util=cluster_details["v4_api_util"])
             network_list = []
 
             for network in cluster_details.get("networks"):

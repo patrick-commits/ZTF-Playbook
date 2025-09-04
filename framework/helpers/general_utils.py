@@ -497,3 +497,67 @@ def send_mail_helper(subject: str, body: str, from_mail: str, to_mail: str, smtp
     # s.login("testuser", "w3lc0me")
     s.sendmail(from_mail, to_mail.split(","), msg.as_string())
     s.quit()
+
+def get_ip_and_create_host_record(ipam_obj, logger_obj, fqdn: str, subnet: str = None, ip: str = None,) -> tuple:
+    """Get IP and create host record in IPAM
+    Args:
+        fqdn (str): Fully qualified Domain Name to create host record
+        subnet (str, optional): Subnet to get free IP from. Defaults to None.
+        ip (str, optional): IP Address if already passed in the config file. Defaults to None.
+
+    Returns:
+        tuple (str, str): Return IP Address and error message if there is any error.
+    """
+    if ip:
+        if ipam_obj.check_host_record_exists(ip):
+            logger_obj.warning(f"Host record present for given IP {ip}. Skipping host record creation")
+        else:
+            logger_obj.info(f"Creating Host record {fqdn} for given IP {ip}")
+            _, error = ipam_obj.create_host_record(fqdn=fqdn, ip=ip)
+            if error:
+                return None, f"Failed to create host record: {error}"
+        return ip, ""
+    elif subnet:
+        logger_obj.info("Fetching Next available free IP from IPAM")
+        ip, error = ipam_obj.create_host_record_with_next_available_ip(network=subnet, fqdn=fqdn)
+        if error:
+            return None, f"Failed to get ip from ipam: {error}"
+        logger_obj.info(f"Got IP {ip} from IPAM for fqdn {fqdn}")
+        return ip, ""
+    else:
+        return None, "Neither Subnet or IP was provided to query IPAM"
+
+def assign_ips_from_ipam(node_info: dict, ipam_config: dict, ipam_obj, logger_obj) -> Tuple[bool, Optional[str]]:
+    hypervisor_hostname = node_info.get("hypervisor_hostname")
+    if not hypervisor_hostname:
+        return False, "Missing 'hypervisor_hostname' in node_info"
+    host_ip, error = get_ip_and_create_host_record(
+        ipam_obj = ipam_obj, logger_obj=logger_obj, fqdn=f"{hypervisor_hostname}.{ipam_config['domain']}",
+        subnet=ipam_config.get("host_subnet"), ip=node_info.get("host_ip"))
+    if error:
+        return False, f"Failed to update Host IP: {error}"
+    cvm_ip, error = get_ip_and_create_host_record(
+        ipam_obj = ipam_obj, logger_obj=logger_obj, fqdn=f"{node_info['node_serial']}-cvm.{ipam_config['domain']}",
+        subnet=ipam_config.get("host_subnet"), ip=node_info.get("cvm_ip"))
+    if error:
+        return False, f"Failed to update CVM IP: {error}"
+    ipmi_ip, error = get_ip_and_create_host_record(
+        ipam_obj = ipam_obj, logger_obj=logger_obj, fqdn=f"{node_info['node_serial']}-ipmi.{ipam_config['domain']}",
+        subnet=ipam_config.get("ipmi_subnet"), ip=node_info.get("ipmi_ip"))
+    if error:
+        logger_obj.warning(f"Failed to update IPMI IP: {error}")
+        return True, None
+    node_info["host_ip"] = host_ip
+    node_info["cvm_ip"] = cvm_ip
+    node_info["ipmi_ip"] = ipmi_ip
+    return True, None
+
+def update_network_info_in_existing_node_dict(key, existing_node_detail_dict: dict, network: dict):
+    if network.get("cvm_gateway"):
+        existing_node_detail_dict[key]["cvm_gateway"] = network["cvm_gateway"]
+        existing_node_detail_dict[key]["hypervisor_gateway"] = network["cvm_gateway"]
+    if network.get("cvm_netmask"):
+        existing_node_detail_dict[key]["cvm_netmask"] = network["cvm_netmask"]
+        existing_node_detail_dict[key]["hypervisor_netmask"] = network["cvm_netmask"]
+    if network.get("cvm_vlan_id"):
+        existing_node_detail_dict[key]["cvm_vlan_id"] = network["cvm_vlan_id"]

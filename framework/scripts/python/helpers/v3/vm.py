@@ -88,7 +88,8 @@ class VM(PcEntity):
                 disk_list.append(self.create_disk_spec_from_image(image_uuid=image_uuid,
                                                                   device_index=device_index))
                 device_index += 1
-        payload["resources"]["disk_list"] = disk_list
+
+        payload["spec"]["resources"]["disk_list"] = disk_list
 
         # NIC to be added. For now supporting only one NIC addition
         # TODO: support multiple NICs for a VM
@@ -100,39 +101,40 @@ class VM(PcEntity):
             if not network_uuid:
                 raise Exception(f"Network {kwargs['network']} not found in cluster {cluster_name}")
             nic_list.append({"subnet_reference": {"uuid": network_uuid, "kind": "subnet"}})
-            payload["resources"]["nic_list"] = nic_list
+            payload["spec"]["resources"]["nic_list"] = nic_list
 
         # Update VM resouce specs
-        payload["resources"]["num_vcpus_per_socket"] = kwargs.pop("num_vcpus_per_socket", 1)
-        payload["resources"]["num_sockets"] = kwargs.pop("num_vcpus", 1)
-        payload["resources"]["memory_size_mib"] = kwargs.pop("memory_mb", 1024)
-        payload["resources"]["power_state"] = kwargs.pop("power_state", "OFF")
+        payload["spec"]["resources"]["num_vcpus_per_socket"] = kwargs.pop("num_vcpus_per_socket", 1)
+        payload["spec"]["resources"]["num_sockets"] = kwargs.pop("num_vcpus", 1)
+        payload["spec"]["resources"]["memory_size_mib"] = kwargs.pop("memory_mb", 1024)
+        payload["spec"]["resources"]["power_state"] = kwargs.pop("power_state", "OFF")
+
 
         # Updating boot config
         boot_type = kwargs.get("boot_type", "LEGACY")
-        payload["resources"]["boot_config"] = {"boot_type": boot_type}
+        payload["spec"]["resources"]["boot_config"] = {"boot_type": boot_type}
         if boot_type == "SECURE_BOOT":
-            payload["resources"]["machine_type"] = self.MACHINE_TYPE
+            payload["spec"]["resources"]["machine_type"] = self.MACHINE_TYPE
             if kwargs.get("hardware_virtualization_enabled"):
-                payload["resources"]["hardware_virtualization_enabled"] = True
+                payload["spec"]["resources"]["hardware_virtualization_enabled"] = True
         if boot_type == "LEGACY":
             # Default order is applied.
             # TODO: Ability to provide the boot priority
-            payload["resources"]["boot_config"]["boot_device_order_list"]: ["CDROM", "DISK", "NETWORK"]
+            payload["spec"]["resources"]["boot_config"]["boot_device_order_list"] = ["CDROM", "DISK", "NETWORK"]
 
         # Update Cluster uuid
         cluster_obj = PcCluster(session=self.session)
         cluster_uuid = cluster_obj.get_uuid_by_name(cluster_name)
         if not cluster_uuid:
             raise Exception(f"Invalid Cluster name {cluster_name} specified!")
-        payload["cluster_reference"] = {"uuid": cluster_uuid, "kind": "cluster"}
+        payload["spec"]["cluster_reference"] = {"uuid": cluster_uuid, "kind": "cluster"}
 
         # TODO: Enhance ip_endpoint_list when multi NICs are supported
         if kwargs.get("ip_endpoint_list", None):
-            payload["resources"]["nic_list"][0]["ip_endpoint_list"] = kwargs.get("ip_endpoint_list")
+            payload["spec"]["resources"]["nic_list"][0]["ip_endpoint_list"] = kwargs.get("ip_endpoint_list")
 
         if kwargs.get("guest_customization", None):
-            payload["resources"]["guest_customization"] = kwargs.get("guest_customization")
+            payload["spec"]["resources"]["guest_customization"] = kwargs.get("guest_customization")
 
         return payload
 
@@ -157,7 +159,7 @@ class VM(PcEntity):
 
     @staticmethod
     def get_pc_vm_payload():
-        {
+        return {
             "metadata": {
                 "categories_mapping": {},
                 "kind": "vm",
@@ -180,7 +182,6 @@ class VM(PcEntity):
                             "NETWORK"
                         ]
                     },
-                    "guest_customization": {},
                     "nic_list": []
                 },
                 "cluster_reference": {}

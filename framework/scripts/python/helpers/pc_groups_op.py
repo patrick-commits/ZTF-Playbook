@@ -44,6 +44,9 @@ class PcGroupsOp:
         response = self.__groups_post_call(
             group_member_offset, group_member_count_threshold, **kwargs)
         entities_json.extend(self.__parse_response(response))
+        if not response.get("group_results"):
+            return entities_json
+
         total_entity_count = response["group_results"][0].get("total_entity_count")
         filtered_entity_count = response["group_results"][0].get("filtered_entity_count", None)
         '''modified this assignment as value stays as None

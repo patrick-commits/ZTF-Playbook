@@ -33,8 +33,9 @@ class FoundationScript(Script):
 
     def __init__(self, data: Dict):
         self.data = data
-        self.pod = self.data["pod"]
+        self.pod = self.data.get("pod",{})
         self.blocks = self.pod.get("pod_blocks", {})
+        self.sites = self.data.get("sites")
         self.ipam_obj = self.data.get("ipam_session")
         self.cred_details = {}
         super(FoundationScript, self).__init__()
@@ -139,7 +140,7 @@ class FoundationScript(Script):
             node_info["ipmi_ip"] = ipmi_ip
             node_info["ipmi_gateway"] = (node.get("ipmi_gateway") or network.get("ipmi_gateway") or
                                          node_info.get("ipmi_gateway"))
-            node_info["ipmi_netmask"] = get_subnet_mask(subnet=network.get("ipmi_subnet")) if network.get("ipmi_subnet") else node_info.get("ipmi_netmask")
+            node_info["ipmi_netmask"] = get_subnet_mask(subnet=network["ipmi_subnet"]) if network.get("ipmi_subnet") else node_info.get("ipmi_netmask")
             if network_bond_settings:
                 node_info["network_bond_settings"] = network_bond_settings
         return existing_node_detail_dict, None
@@ -530,22 +531,41 @@ class FoundationScript(Script):
         """Run Image cluster nodes for multiple sites
         """
         overall_result = {}
-        # Looping through blocks
-        for block_info in self.blocks:
-            create_pc_objects(block_info, global_data=self.data)
-            self.cred_details = self.data['vaults'][self.data['vault_to_use']]['credentials']
+        if self.sites and not self.pod:
+            #Workflow : Sites Deploy
+            #If only sites are provided, create PC objects for sites
+            create_pc_objects(data=self.data)
             try:
-                self.logger.info(f"Start deployment for block {block_info['pod_block_name']}")
-                self.pc_session = block_info["pc_session"]
+                self.logger.info(f"Starting deployment for sites")
+                self.pc_session = self.data["pc_session"]
 
                 # Looping through sites
-                for site_config in block_info["edge-sites"]:
-                    results = self.deploy_site(block_info, site_config)
+                for site_config in self.sites:
+                    self.data["pod_block_name"] = ""
+                    results = self.deploy_site(self.data, site_config)
                     overall_result.update(results)
             except Exception as e:
                 self.exceptions.append(e)
-        self.logger.info(json.dumps(overall_result, indent=2))
-        self.data["json_output"] = overall_result
+            self.logger.info(json.dumps(overall_result, indent=2))
+            self.data["json_output"] = overall_result
+        else:
+            # Workflow: Pod Deploy
+            # Looping through blocks
+            for block_info in self.blocks:
+                create_pc_objects(block_info, global_data=self.data)
+                self.cred_details = self.data['vaults'][self.data['vault_to_use']]['credentials']
+                try:
+                    self.logger.info(f"Start deployment for block {block_info['pod_block_name']}")
+                    self.pc_session = block_info["pc_session"]
+
+                    # Looping through sites
+                    for site_config in block_info["edge-sites"]:
+                        results = self.deploy_site(block_info, site_config)
+                        overall_result.update(results)
+                except Exception as e:
+                    self.exceptions.append(e)
+            self.logger.info(json.dumps(overall_result, indent=2))
+            self.data["json_output"] = overall_result
 
     def verify(self):
         pass

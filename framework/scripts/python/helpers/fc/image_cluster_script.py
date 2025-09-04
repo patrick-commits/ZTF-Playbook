@@ -24,7 +24,7 @@ class ImageClusterScript(Script):
         """
         Run Image cluster nodes in Foundation Central
         """
-        cluster_name = self.cluster_data["cluster_name"]
+        cluster_name = self.cluster_data.get("cluster_name") or self.cluster_data.get("cluster", {}).get("cluster_name")
         self.logger.info(f"Running Image cluster nodes in Foundation Central {cluster_name}")
         spec, error = self.imaging.get_spec(params=self.cluster_data)
         if error:

@@ -23,9 +23,14 @@ class PcEntity(Entity):
             "offset": kwargs.pop("offset", 0),
             "filter": kwargs.pop("filter", ""),
             "length": kwargs.pop("length", self.V3_LIST_CHUNKSIZE),
-            "sort_order": kwargs.pop("sort_order", None),
-            "sort_attribute": kwargs.pop("sort_attribute", None)
+            #"sort_order": kwargs.pop("sort_order", None),
+            #"sort_attribute": kwargs.pop("sort_attribute", None)
         }
+        if kwargs.pop("sort_order", None):
+            payload["sort_order"] = kwargs.pop("sort_order")
+        if kwargs.pop("sort_attribute", None):
+            payload["sort_attribute"] = kwargs.pop("sort_attribute")
+
         if payload["length"] > self.V3_LIST_CHUNKSIZE:
             length = payload["length"]
             payload["length"] = self.V3_LIST_CHUNKSIZE

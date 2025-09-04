@@ -1,4 +1,5 @@
 from .configure_pod import PodConfig
+from .helpers.iam_v1.user import IamUser
 from .ncm.bps.create_bp_calm import CreateBp
 from .ncm.apps.create_calm_application_from_dsl import CreateAppFromDsl
 from .ncm.project.create_calm_project import CreateNcmProject
@@ -8,13 +9,13 @@ from .ndb.update_password_ndb import UpdatePasswordNdb
 from .objects.configure_objects import OssConfig
 from .pc.configure_pc import PcConfig
 from .pc.create.create_identity_provider import CreateIdp
+from .pc.enable.enable_marketplace import EnableMarketplace
 from .pc.upload.pc_image_upload import PcImageUpload
 from .pc.upload.pc_ova_upload import PcOVAUpload
 from .pe.configure_cluster import ClusterConfig
 from .pe.create.create_container_pe import CreateContainerPe
 from .nke.create_nke_clusters import CreateKarbonClusterPc
 from .objects.buckets.create_bucket import CreateBucket
-from .objects.directory.add_directory_service_oss import AddDirectoryServiceOss
 from .objects.objectstore.create_objectstore import CreateObjectStore
 from .pc.create.create_recovery_plan import CreateRecoveryPlan
 from .ncm.project.create_calm_user import CreateNcmUser
@@ -53,6 +54,8 @@ from .pc.enable.enable_flow_pc import EnableMicrosegmentation
 from .pc.enable.enable_nke_pc import EnableNke
 from .pc.enable.enable_objects import EnableObjects
 from .pc.enable.enable_network_controller import EnableNetworkController
+from .pc.enable.enable_foundation_central import EnableFC
+from .pc.fc.generate_fc_api_key import GenerateFcApiKey
 from .pc.other_ops.accept_eula import AcceptEulaPc
 from .pc.other_ops.change_default_system_password import ChangeDefaultAdminPasswordPc
 from .pc.other_ops.power_on_vm_pc import PowerOnVmPc
@@ -81,7 +84,6 @@ from .ncm.project.update_calm_project import UpdateCalmProject
 from .configure_management_plane import ConfigManagementPlane
 from .deploy_management_plane import DeployManagementPlane
 from .pe.create.add_name_server_pe import AddNameServersPe
-from .objects.directory.add_ad_users_oss import AddAdUsersOss
 from .objects.buckets.share_bucket import ShareBucket
 from .pe.other_ops.update_pulse import UpdatePulsePe
 from .pe.update.ha_reservation import HaReservation
@@ -92,16 +94,25 @@ from .cvm.update_cvm_foundation import UpdateCvmFoundation
 from .pc.create.create_vpc_pc import CreateVPC
 from .pc.delete.delete_vpc_pc import DeleteVPC
 from .pc.update.update_vpc_pc import UpdateVPC
+from .pc.fc.create_cluster import CreateCluster
+from .pc.fc.imaging_only import Imaging
+from .iam.add_roles import AddRoles
+from .iam.add_user_groups import AddUserGroups
+from .iam.add_local_users import AddLocalUsers
+from .iam.import_users import ImportUsers
+from .iam.create_iam_keys import CreateIAMKeys
+from .iam.add_authorization_policy import AddAuthorizationPolicy
+from .iam.add_directory_services import AddDirectoryServices
+from .pc.create.create_pc_vms import CreateVmsPc
 
 
-__all__ = ["AddAdServerPe", "PodConfig", "ConnectToAz", "CreateBp", "CreateCategoryPc",
-           "CreateContainerPe", "CreateServiceGroups", "CreateRoleMappingPe", "CreateNetworkSecurityPolicy",
-           "CreateRecoveryPlan", "CreateProtectionPolicy", "CreateSubnetsPc", "CreateKarbonClusterPc",
-           "CreateNcmProject", "CreateAppFromDsl", "CreateAddressGroups", "EnableDR", "EnableMicrosegmentation",
-           "EnableNke", "FoundationScript", "InitCalmDsl", "LaunchBp", "RegisterToPc", "UpdateDsip",
-           "UpdateCalmProject", "EnableObjects", "AddNameServersPc", "AddNtpServersPc", "AddNameServersPe",
-           "AddNtpServersPe", "CreateObjectStore", "AddDirectoryServiceOss", "AddAdUsersOss", "CreateBucket",
-           "ShareBucket", "UpdateCalmProject", "ConfigManagementPlane", "CreateRoleMappingPc",
+
+__all__ = ["AddAdServerPe", "PodConfig", "ConnectToAz", "CreateBp", "CreateCategoryPc", "CreateContainerPe", "CreateServiceGroups",
+           "CreateRoleMappingPe", "CreateNetworkSecurityPolicy", "CreateRecoveryPlan", "CreateProtectionPolicy",
+           "CreateSubnetsPc", "CreateKarbonClusterPc", "CreateNcmProject", "CreateAppFromDsl", "CreateAddressGroups",
+           "EnableDR", "EnableMicrosegmentation", "EnableNke", "FoundationScript", "InitCalmDsl", "LaunchBp", "RegisterToPc",
+           "UpdateDsip", "EnableObjects", "AddNameServersPc", "AddNtpServersPc", "AddNameServersPe", "AddNtpServersPe",
+           "CreateObjectStore", "CreateBucket", "ShareBucket", "UpdateCalmProject", "ConfigManagementPlane", "CreateRoleMappingPc",
            "AddAdServerPc", "CreateNcmUser", "CreateNcmAccount", "DeployManagementPlane", "HaReservation",
            "RebuildCapacityReservation", "CreateSubnetPe", "DeleteNtpServersPc", "DeleteNtpServersPe",
            "DeleteNameServersPc", "DeleteNameServersPe", "DeleteNameServersPc", "DeleteRoleMappingPe",
@@ -113,6 +124,8 @@ __all__ = ["AddAdServerPe", "PodConfig", "ConnectToAz", "CreateBp", "CreateCateg
            "UpdatePulsePe", "AcceptEulaPe", "PcConfig", "ClusterConfig", "OssConfig", "DeployPC", "DeleteSubnetsPc",
            "DeleteSubnetsPe", "PcImageUpload", "PcOVAUpload", "CreateIdp", "UpdateCvmFoundation", "CreateVPC",
            "DeleteVPC", "UpdateVPC", "EnableNetworkController", "DisableNetworkController", "DeleteSubnetsPe",
-           "PcImageUpload", "PcOVAUpload", "CreateIdp", "UpdateCvmFoundation", "UploadImagePe",
-           "CreateVmPe", "PowerTransitionVmPe", "NdbConfig", "UpdatePasswordNdb", "RegisterInitClusterNdb"]
-
+           "PcImageUpload", "PcOVAUpload", "CreateIdp", "UpdateCvmFoundation", "UploadImagePe", "CreateCluster", "Imaging",
+           "CreateVmPe", "PowerTransitionVmPe", "NdbConfig", "UpdatePasswordNdb", "RegisterInitClusterNdb", "CreateVmsPc",
+           "AddUserGroups", "ImportUsers", "AddAuthorizationPolicy", "AddLocalUsers", "CreateIAMKeys", "AddRoles",
+           "AddAuthorizationPolicy", "AddDirectoryServices", "EnableFC", "GenerateFcApiKey", "EnableMarketplace",
+           "IamUser"]

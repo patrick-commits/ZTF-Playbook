@@ -83,6 +83,353 @@ IMAGING_NETWORK = {
     }
 }
 
+IMAGING_PARAMETERS_SCHEMA = {
+    'type': 'dict',
+    'schema': {
+        'aos_package_url': {
+            'type': 'string',
+            'required': True
+        },
+        'aos_package_sha256sum': {
+            'type': 'string',
+            'required': False
+        },
+        'aos_metadata_url': {
+            'type': 'string',
+            'required': False
+        }
+    }
+}
+
+HYPERVISOR_ISO_SCHEMA = {
+    'type': 'list',
+    'schema': {
+        'type': 'dict',
+        'schema': {
+            'hypervisor_type': {
+                'type': 'string',
+                'required': True,
+                'allowed': ['kvm', 'esx', 'hyperv']
+            },
+            'url': {
+                'type': 'string',
+                'required': True
+            },
+            'sha256sum': {
+                'type': 'string',
+                'required': False
+            }
+        }
+    }
+}
+
+CLUSTER_CREATE_SCHEMA = {
+    'pc_credential': {
+        'type': 'string',
+        'required': True,
+        'validator': contains_whitespace
+    },
+    'cvm_credential': {
+        'type': 'string',
+        'required': True,
+        'validator': contains_whitespace
+    },
+    'pc_ip': {
+        'type': 'string',
+        'required': True,
+        'validator': validate_ip
+    },
+    'common_network_settings': {
+        'type': 'dict',
+        'required': True,
+        'schema': {
+            'dns_servers': {
+                'type': 'list',
+                'required': True,
+                'schema': {
+                    'type': 'string',
+                    'validator': validate_ip
+                }
+            },
+            'ntp_servers': {
+                'type': 'list',
+                'required': True,
+                'schema': {
+                    'type': 'string'
+                }
+            }
+        }
+    },
+    'network': {
+        'type': 'dict',
+        'required': False,
+        'schema': {
+            'cvm_gateway': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_ip
+            },
+            'cvm_netmask': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_netmask
+            },
+            'ipmi_gateway': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_ip
+            },
+            'ipmi_netmask': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_netmask
+            }
+        }
+    },
+    'ipam_config': {
+        'type': 'dict',
+        'required': False,
+        'schema': {
+            'host_subnet': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_subnet
+            },
+            'ipmi_subnet': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_subnet
+            },
+            'domain': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_domain
+            }
+        }
+    },
+    'create_clusters': {
+        'type': 'list',
+        'required': True,
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'cluster_name': {
+                    'type': 'string',
+                    'required': True
+                },
+                'nodes_list': {
+                    'type': 'list',
+                    'required': True,
+                    'schema': {
+                        'type': 'dict',
+                        'schema': {
+                            'node_serial': {
+                                'type': 'string',
+                                'required': True
+                            },
+                            'cvm_ip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'cvm_ram_gb': {
+                                'type': 'integer',
+                                'required': False,
+                                'min': 12
+                            },
+                            'hypervisor_ip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'ipmi_ip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'hypervisor_hostname': {
+                                'type': 'string',
+                                'required': False
+                            }
+                        }
+                    }
+                },
+                'cluster_external_ip': {
+                    'type': 'string',
+                    'required': False,
+                    'validator': validate_ip
+                },
+                'redundancy_factor': {
+                    'type': 'integer',
+                    'required': False,
+                    'allowed': [2, 3]
+                },
+                'timezone': {
+                    'type': 'string',
+                    'required': False
+                }
+            }
+        }
+    }
+}
+
+IMAGING_ONLY_SCHEMA = {
+    'pc_credential': {
+        'type': 'string',
+        'required': True,
+        'validator': contains_whitespace
+    },
+    'cvm_credential': {
+        'type': 'string',
+        'required': True,
+        'validator': contains_whitespace
+    },
+    'pc_ip': {
+        'type': 'string',
+        'required': True,
+        'validator': validate_ip
+    },
+    'common_network_settings': {
+        'type': 'dict',
+        'required': True,
+        'schema': {
+            'dns_servers': {
+                'type': 'list',
+                'required': True,
+                'schema': {
+                    'type': 'string',
+                    'validator': validate_ip
+                }
+            },
+            'ntp_servers': {
+                'type': 'list',
+                'required': True,
+                'schema': {
+                    'type': 'string'
+                }
+            }
+        }
+    },
+    'network': {
+        'type': 'dict',
+        'required': False,
+        'schema': {
+            'cvm_gateway': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_ip
+            },
+            'cvm_netmask': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_netmask
+            },
+            'ipmi_gateway': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_ip
+            },
+            'ipmi_netmask': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_netmask
+            }
+        }
+    },
+    'ipam_config': {
+        'type': 'dict',
+        'required': False,
+        'schema': {
+            'host_subnet': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_subnet
+            },
+            'ipmi_subnet': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_subnet
+            },
+            'domain': {
+                'type': 'string',
+                'required': False,
+                'validator': validate_domain
+            }
+        }
+    },
+    'imaging_parameters': IMAGING_PARAMETERS_SCHEMA,
+    'hypervisor_isos': HYPERVISOR_ISO_SCHEMA,
+    'imaging': {
+        'type': 'list',
+        'required': True,
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'hypervisor_isos': HYPERVISOR_ISO_SCHEMA,
+                'imaging_parameters': IMAGING_PARAMETERS_SCHEMA,
+                'common_network_settings': {
+                    'type': 'dict',
+                    'required': True,
+                    'schema': {
+                        'dns_servers': {
+                            'type': 'list',
+                            'required': True,
+                            'schema': {
+                                'type': 'string',
+                                'validator': validate_ip
+                            }
+                        },
+                        'ntp_servers': {
+                            'type': 'list',
+                            'required': True,
+                            'schema': {
+                                'type': 'string'
+                            }
+                        }
+                    }
+                },
+                'nodes_list': {
+                    'type': 'list',
+                    'required': True,
+                    'schema': {
+                        'type': 'dict',
+                        'schema': {
+                            'node_serial': {
+                                'type': 'string',
+                                'required': True
+                            },
+                            'cvm_ip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'cvm_ram_gb': {
+                                'type': 'integer',
+                                'required': False,
+                                'min': 12
+                            },
+                            'hypervisor_ip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'ipmi_ip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'hypervisor_hostname': {
+                                'type': 'string',
+                                'required': False
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 IMAGING_SCHEMA = {
     'pod': {
         'type': 'dict',
@@ -135,7 +482,7 @@ IMAGING_SCHEMA = {
                                                 'type': 'string'
                                             },
                                             'hypervisor_type': {
-                                                'required': True,
+                                                'required': False,
                                                 'type': 'string',
                                                 'allowed': ['kvm', 'esx', 'hyperv']
                                             },
@@ -237,6 +584,133 @@ IMAGING_SCHEMA = {
         }
     }
 }
+
+SITE_DEPLOY_SCHEMA = {
+    'sites': {
+        'type': 'list',
+        'required': True,
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'site_name': {
+                    'required': True,
+                    'type': 'string'
+                },
+                'use_existing_network_settings': {
+                    'required': False,
+                    'type': 'boolean'
+                },
+                're-image': {
+                    'required': True,
+                    'type': 'boolean'
+                },
+                'imaging_parameters': {
+                    'type': 'dict',
+                    'required': False,
+                    'schema': {
+                        'aos_url': {
+                            'required': True,
+                            'type': 'string'
+                        },
+                        'hypervisor_type': {
+                            'required': True,
+                            'type': 'string',
+                            'allowed': ['kvm', 'esx', 'hyperv']
+                        },
+                        'hypervisor_url': {
+                            'type': 'string'
+                        }
+                    }
+                },
+                'ntp_servers_list': {
+                    'type': 'list',
+                    'required': False
+                },
+                'name_servers_list': {
+                    'type': 'list',
+                    'required': True
+                },
+                'network': IMAGING_NETWORK,
+                'clusters': {
+                    'type': 'list',
+                    'required': True,
+                    'schema': {
+                        'type': 'dict',
+                        'schema': {
+                            'cluster_name': {
+                                'type': 'string',
+                                'required': True,
+                            },
+                            'cluster_size': {
+                                'type': 'integer',
+                                'required': True,
+                            },
+                            'cluster_vip': {
+                                'type': 'string',
+                                'required': False,
+                                'validator': validate_ip
+                            },
+                            'cvm_ram': {
+                                'type': 'integer',
+                                'required': False,
+                                'min': 12
+                            },
+                            'redundancy_factor': {
+                                'type': 'integer',
+                                'required': True,
+                                'allowed': [2, 3]
+                            },
+                            'node_details': {
+                                'type': 'list',
+                                'required': False,
+                                'schema': {
+                                    'type': 'dict',
+                                    'schema': {
+                                        'node_serial': {
+                                            'type': 'string',
+                                            'required': True,
+                                            'validator': contains_whitespace
+                                        },
+                                        'cvm_ip': {
+                                            'type': 'string',
+                                            'required': False,
+                                            'validator': validate_ip
+                                        },
+                                        'host_ip': {
+                                            'type': 'string',
+                                            'required': False,
+                                            'validator': validate_ip
+                                        },
+                                        'ipmi_ip': {
+                                            'type': 'string',
+                                            'required': False,
+                                            'validator': validate_ip
+                                        },
+                                        'hypervisor_hostname': {
+                                            'type': 'string',
+                                            'required': False,
+                                            'validator': contains_whitespace
+                                        }
+                                    }
+                                }
+                            },
+                            'network': IMAGING_NETWORK,
+                            'use_existing_network_settings': {
+                                'required': False,
+                                'type': 'boolean'
+                            },
+                            're-image': {
+                                'required': False,
+                                'type': 'boolean'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 EULA_SCHEMA = {
     'eula': {

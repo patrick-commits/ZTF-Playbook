@@ -1,5 +1,6 @@
 from copy import deepcopy
 from typing import Optional, Dict
+from framework.scripts.python.pc.fc.generate_fc_api_key import GenerateFcApiKey
 from framework.scripts.python.pc.create.create_identity_provider import CreateIdp
 from framework.scripts.python.objects.configure_objects import OssConfig
 from framework.scripts.python.pc.other_ops.accept_eula import AcceptEulaPc
@@ -16,6 +17,8 @@ from framework.scripts.python.pc.enable.enable_dr_pc import EnableDR
 from framework.scripts.python.pc.enable.enable_flow_pc import EnableMicrosegmentation
 from framework.scripts.python.pc.enable.enable_network_controller import EnableNetworkController
 from framework.scripts.python.pc.enable.enable_nke_pc import EnableNke
+from framework.scripts.python.pc.enable.enable_marketplace import EnableMarketplace
+from framework.scripts.python.pc.enable.enable_foundation_central import EnableFC
 from framework.scripts.python.helpers.batch_script import BatchScript
 from framework.scripts.python.script import Script
 from framework.scripts.python.pc.create.add_ad_server_pc import AddAdServerPc
@@ -70,6 +73,8 @@ class PcConfig(Script):
                 pc_batch_scripts.add(AddAdServerPc(self.data, log_file=self.log_file))
             if "pc_saml_idp_configs" in self.data or "saml_idp_configs" in self.data:
                 pc_batch_scripts.add(CreateIdp(self.data, log_file=self.log_file))
+            if "enable_marketplace" in self.data and self.data["enable_marketplace"] is True:
+                pc_batch_scripts.add(EnableMarketplace(self.data, log_file=self.log_file))
 
             # Add Role-mappings -> needs AddAdServer
             # Add NTP servers -> InitialPcConfig
@@ -81,6 +86,8 @@ class PcConfig(Script):
                 pc_enable_scripts.add(EnableDR(self.data, log_file=self.log_file))
             if "enable_nke" in self.data and self.data["enable_nke"] is True:
                 pc_enable_scripts.add(EnableNke(self.data, log_file=self.log_file))
+            if "enable_fc" in self.data and self.data["enable_fc"] is True:
+                pc_enable_scripts.add(EnableFC(self.data, log_file=self.log_file))
             if "remote_azs" in self.data:
                 pc_enable_scripts.add(ConnectToAz(self.data, log_file=self.log_file))
             if "ntp_servers_list" in self.data or "pc_ntp_servers_list" in self.data:
@@ -105,6 +112,8 @@ class PcConfig(Script):
                 pc_create_scripts.add(CreateAddressGroups(self.data, log_file=self.log_file))
             if "service_groups" in self.data:
                 pc_create_scripts.add(CreateServiceGroups(self.data, log_file=self.log_file))
+            if "generate_fc_api_key" in self.data and self.data["generate_fc_api_key"] is True:
+                pc_create_scripts.add(GenerateFcApiKey(self.data, log_file=self.log_file))
 
             if pc_create_scripts.script_list:
                 pc_batch_scripts.add(pc_create_scripts)
