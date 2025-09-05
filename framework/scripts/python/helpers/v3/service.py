@@ -8,6 +8,7 @@ class Service(PcEntity):
     ENABLED = "ENABLED"
     ENABLING = "ENABLING"
     DISABLED = "DISABLED"
+    HEALTHY = "HEALTHY"
 
     def __init__(self, session: RestAPIUtil):
         self.resource_type = "/services"
@@ -110,3 +111,36 @@ class Service(PcEntity):
             'state': 'DISABLE'
         }
         return self.create(data=payload, endpoint=endpoint)
+
+    def enable_marketplace(self):
+        """
+        Enable marketplace
+        Returns:
+          (bool): True if marketplace enabled
+        """
+        endpoint = "nucalm"
+        payload = {
+            "perform_validation_only": False,
+            "enable_nutanix_apps": True,
+            "enable_lite": True
+        }
+        return self.create(data=payload, endpoint=endpoint)
+
+    def get_marketplace_enable_status(self) -> dict:
+        """
+        get marketplace enablement status
+        Returns:
+          (json): response obj
+        """
+        endpoint = "nucalm_lite/status"
+        return self.read(endpoint=endpoint)
+
+    def is_marketplace_enabled(self):
+        """
+        Check if marketplace is enabled
+        Returns:
+          (bool): True if marketplace enabled
+        """
+        state = self.get_marketplace_enable_status()
+        return state.get("service_enablement_status", "DISABLED") == "ENABLED" and \
+            state.get("service_running_status", "UNHEALTHY") == "HEALTHY"

@@ -472,6 +472,9 @@ def create_pe_objects(data: dict, global_data: Optional[Dict] = None):
                                      user=cred_details[pe_cred]['username'],
                                      pwd=cred_details[pe_cred]['password'],
                                      port="9440", secured=True)
+            v4_api_util = ApiClientV4(
+                cluster_ip, "9440", cred_details[pe_cred]['username'], cred_details[pe_cred]['password']
+                )
         else:
             # use default session
             logger.warning(f"Using default PE credentials for {cluster_ip}!")
@@ -480,6 +483,9 @@ def create_pe_objects(data: dict, global_data: Optional[Dict] = None):
                                      user=DEFAULT_PRISM_USERNAME,
                                      pwd=default_pe_password or DEFAULT_PRISM_PASSWORD,
                                      port="9440", secured=True)
+            v4_api_util = ApiClientV4(
+                cluster_ip, "9440", DEFAULT_PRISM_USERNAME, default_pe_password or DEFAULT_PRISM_PASSWORD
+                )
         # cluster_op = PeCluster(pe_session)
         # try:
         #     cluster_op.get_cluster_info()
@@ -495,6 +501,7 @@ def create_pe_objects(data: dict, global_data: Optional[Dict] = None):
         clusters_map[cluster_ip] = cluster_details
         clusters_map[cluster_ip]["cluster_info"] = cluster_info
         clusters_map[cluster_ip]["pe_session"] = pe_session
+        clusters_map[cluster_ip]["v4_api_util"] = v4_api_util
 
     data["clusters"] = clusters_map if clusters_map else data.get("clusters", {})
 

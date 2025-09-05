@@ -59,3 +59,21 @@ class ImagedNode(FcEntity):
             if node["node_serial"] in node_serial_list:
                 node_details[node["node_serial"]] = node
         return node_details
+    
+    def node_details_by_cvm_ip(self, cvms_list: List, fc_available_node_list: Optional[List] = None):
+        """Fetch Node details based on cvms IP list
+
+        Args:
+            cvms_list (list): List of CVM IPs serials to filter from available nodes
+            fc_available_node_list (List, Optional): List of available node in Foundation Central
+
+        Returns:
+            List: List of node details for the given CVM IPs
+        """
+        node_details = {}
+        if not fc_available_node_list:
+            fc_available_node_list, error = self.node_details()
+        for node in fc_available_node_list:
+            if node["cvm_ip"] in cvms_list:
+                node_details[node["cvm_ip"]] = node
+        return node_details

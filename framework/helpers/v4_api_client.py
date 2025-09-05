@@ -1,11 +1,13 @@
 import ntnx_microseg_py_client
 import ntnx_networking_py_client
 import ntnx_prism_py_client
+import ntnx_iam_py_client
 
 CLIENT_MAPPER = {
     'microseg': ntnx_microseg_py_client,
     'network': ntnx_networking_py_client,
-    'prism': ntnx_prism_py_client
+    'prism': ntnx_prism_py_client,
+    'iam': ntnx_iam_py_client
 }
 
 class ApiClientV4:

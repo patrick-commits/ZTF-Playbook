@@ -250,6 +250,9 @@ class SSHCvm(SSHEntity):
             if "completed" in output.lower() or "completed" in err.lower():
                 self.logger.info(output)
                 status = True
+            elif "already exists on the cluster" in output.lower() or "already exists on the cluster" in err.lower():
+                self.logger.warning(f"{self.cvm_ip}: Software already exists on the cluster")
+                status = True
             else:
                 error_message = output.lower() + err.lower()
             return status, error_message

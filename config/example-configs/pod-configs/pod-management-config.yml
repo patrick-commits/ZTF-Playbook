@@ -6,7 +6,7 @@ pc_creds: &pc_creds
   # This can be admin/ ad user. Note ad creds will be used after adding AD to PC
   pc_credential: pc_user
   # below parameter is needed if we are updating default password for "admin"
-  new_pc_admin_credential: new_admin_password # credential reference from "vaults" in global.yml file
+  new_pc_admin_credential: new_admin_credential # credential reference from "vaults" in global.yml file
 
 pe_creds: &pe_creds
   # This can be admin/ ad user. Note ad creds will be used after adding AD to PE

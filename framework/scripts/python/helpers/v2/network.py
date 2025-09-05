@@ -1,13 +1,15 @@
-from typing import Dict
+from typing import Dict, Optional
 from framework.helpers.rest_utils import RestAPIUtil
-from ..v1.virtual_switch import VirtualSwitch
+from ..v4.virtual_switch import VirtualSwitch
 from ..pe_entity_v2 import PeEntityV2
+from framework.helpers.v4_api_client import ApiClientV4
 
 
 class Network(PeEntityV2):
-    def __init__(self, session: RestAPIUtil):
+    def __init__(self, session: RestAPIUtil, v4_api_util: Optional[ApiClientV4] = None):
         self.resource_type = "/networks"
         self.session = session
+        self.v4_api_util = v4_api_util
         super(Network, self).__init__(session=session)
 
     def create(self, **kwargs):
@@ -67,7 +69,7 @@ class Network(PeEntityV2):
         name = kwargs.get("name")
         vlan_id = kwargs.get("vlan_id", None)
         ip_config = kwargs.get("ip_config", {})
-        virtual_switch = kwargs.get("virtual_switch", "")
+        virtual_switch = kwargs.get("virtual_switch", None)
 
         payload = {
                 "name": name,
@@ -78,7 +80,7 @@ class Network(PeEntityV2):
             payload["vlan_id"] = vlan_id
 
         if virtual_switch is not None:
-            vs = VirtualSwitch(session=self.session)
+            vs = VirtualSwitch(v4_api_util=self.v4_api_util)
             virtual_switch_uuid = vs.get_vs_uuid(name=virtual_switch)
             payload["virtual_switch_uuid"] = virtual_switch_uuid
         if ip_config:

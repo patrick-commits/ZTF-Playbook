@@ -114,6 +114,7 @@ pod:
                   host_ip: valid-host-ip
                 - node_serial: node-serial-3
               redundancy_factor: 2 # Nutanix supports RF2, and also RF3 only if the cluster has 5+ nodes
+              timezone: "America/New_York" # Optional. Timezone for the site
             - cluster_name: site01-cluster-01
               cluster_size: 3 # Cluster size will be the number of nodes for deployment
               cluster_vip: valid-cluster-vip-ip
