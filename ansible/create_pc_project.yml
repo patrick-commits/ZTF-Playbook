@@ -1,0 +1,263 @@
+---
+- name: Create Nutanix PC project with dedicated IP pool
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_prompt:
+    - name: customer_name
+      prompt: "Customer / tenant name"
+      private: no
+    - name: ip_range
+      prompt: "IPv4 range to dedicate to the project (format: start-end)"
+      private: no
+    - name: ldap_name
+      prompt: "LDAP directory display name"
+      private: no
+    - name: ldap_domain
+      prompt: "LDAP domain (e.g. example.local)"
+      private: no
+    - name: ldap_url
+      prompt: "LDAP server URL (e.g. ldap://10.0.0.1:389)"
+      private: no
+    - name: ldap_bind_username
+      prompt: "LDAP bind / service account username"
+      private: no
+    - name: ldap_bind_password
+      prompt: "LDAP bind / service account password"
+      private: yes
+
+  vars:
+    pc_host: "{{ lookup('env', 'PC_HOST') | default('pc.example.local', true) }}"
+    pc_port: 9440
+    pc_username: "{{ lookup('env', 'PC_USERNAME') | default('admin', true) }}"
+    pc_password: "{{ lookup('env', 'PC_PASSWORD') | default('Nutanix/4u', true) }}"
+    pc_validate_certs: false
+
+    # Supply the AHV cluster UUID where the subnet should live.
+    cluster_uuid: "{{ lookup('env', 'NTNX_CLUSTER_UUID') | default('00000000-0000-0000-0000-000000000000', true) }}"
+
+    # Update the VLAN ID (or pass --extra-vars "vlan_id=123").
+    vlan_id: "{{ lookup('env', 'NTNX_VLAN_ID') | default(110, true) | int }}"
+
+    # Optional: tie the project to a specific Prism Central VPC.
+    vpc_uuid: "{{ lookup('env', 'NTNX_VPC_UUID') | default('', true) }}"
+
+    # CIDR for the subnet that will be created. Adjust or pass as an extra var.
+    network_cidr: "{{ lookup('env', 'NTNX_NETWORK_CIDR') | default('10.10.10.0/24', true) }}"
+
+    # Optional gateway override (defaults to first IP in the requested pool).
+    gateway_ip_override: "{{ lookup('env', 'NTNX_GATEWAY_IP') | default('', true) }}"
+
+    ldap_directory_type: "{{ lookup('env', 'PC_LDAP_DIRECTORY_TYPE') | default('ACTIVE_DIRECTORY', true) }}"
+    ldap_group_search_type: "{{ lookup('env', 'PC_LDAP_GROUP_SEARCH_TYPE') | default('NON_RECURSIVE', true) }}"
+
+  pre_tasks:
+    - name: Validate IPv4 range input
+      ansible.builtin.assert:
+        that:
+          - ip_range | regex_search('^\\s*\\d+\\.\\d+\\.\\d+\\.\\d+\\s*-\\s*\\d+\\.\\d+\\.\\d+\\.\\d+\\s*$')
+        fail_msg: >
+          Provide the IPv4 range in the form "10.10.10.10-10.10.10.200".
+
+    - name: Split IP range into usable parts
+      ansible.builtin.set_fact:
+        ip_range_clean: "{{ ip_range | regex_replace('\\s+', '') }}"
+        ip_range_parts: "{{ ip_range | regex_replace('\\s+', '') | split('-') }}"
+
+    - name: Derive helper variables
+      ansible.builtin.set_fact:
+        ip_range_start: "{{ ip_range_parts[0] }}"
+        ip_range_end: "{{ ip_range_parts[1] }}"
+        project_name: "{{ customer_name | trim | title }} Project"
+        subnet_name: "{{ customer_name | trim | lower | replace(' ', '-') }}-primary-subnet"
+        network_ip: "{{ network_cidr.split('/')[0] }}"
+        network_prefix: "{{ network_cidr.split('/')[1] | int }}"
+        gateway_ip: "{{ gateway_ip_override | default(ip_range_parts[0], true) | default(ip_range_parts[0]) }}"
+
+    - name: Validate LDAP inputs
+      ansible.builtin.assert:
+        that:
+          - ldap_name | length > 0
+          - ldap_domain | length > 0
+          - ldap_url | length > 0
+          - ldap_bind_username | length > 0
+          - ldap_bind_password | length > 0
+        fail_msg: "LDAP inputs cannot be empty."
+
+    - name: Build HTTP basic auth string
+      ansible.builtin.set_fact:
+        pc_auth: "{{ (pc_username + ':' + pc_password) | b64encode }}"
+        ldap_payload:
+          name: "{{ ldap_name | trim }}"
+          domain: "{{ ldap_domain | trim }}"
+          directory_url: "{{ ldap_url | trim }}"
+          bind_username: "{{ ldap_bind_username | trim }}"
+          bind_password: "{{ ldap_bind_password }}"
+
+  tasks:
+    - name: Look up existing subnet by name
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/api/nutanix/v3/subnets/list"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+        body_format: json
+        body:
+          kind: subnet
+          filter: "name=={{ subnet_name }}"
+      register: existing_subnet
+
+    - name: Create subnet if it does not exist
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/api/nutanix/v3/subnets"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+        body_format: json
+        body:
+          metadata:
+            kind: subnet
+          spec:
+            name: "{{ subnet_name }}"
+            description: "Primary subnet for {{ customer_name }}"
+            resources:
+              subnet_type: VLAN
+              vlan_id: "{{ vlan_id }}"
+              cluster_reference:
+                kind: cluster
+                uuid: "{{ cluster_uuid }}"
+              ip_config:
+                gateway_ip: "{{ gateway_ip }}"
+                default_gateway_ip: "{{ gateway_ip }}"
+                network_ip: "{{ network_ip }}"
+                network_prefix: "{{ network_prefix }}"
+                pool_list:
+                  - range: "{{ ip_range_start }} {{ ip_range_end }}"
+              vpc_reference: >-
+                {% if vpc_uuid %}
+                {{ {'kind': 'vpc', 'uuid': vpc_uuid} }}
+                {% else %}
+                {{ omit }}
+                {% endif %}
+      register: created_subnet
+      when: existing_subnet.json.entities | length == 0
+
+    - name: Select subnet UUID
+      ansible.builtin.set_fact:
+        subnet_uuid: >-
+          {{ (created_subnet.json.metadata.uuid
+              if (existing_subnet.json.entities | length == 0)
+              else existing_subnet.json.entities[0].metadata.uuid) }}
+
+    - name: Look up existing project by name
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/api/nutanix/v3/projects/list"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+        body_format: json
+        body:
+          kind: project
+          filter: "name=={{ project_name }}"
+      register: existing_project
+
+    - name: Create project when not present
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/api/nutanix/v3/projects"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+        body_format: json
+        body:
+          metadata:
+            kind: project
+          spec:
+            name: "{{ project_name }}"
+            description: "Project for {{ customer_name }}"
+            resources:
+              default_subnet_reference_list:
+                - kind: subnet
+                  uuid: "{{ subnet_uuid }}"
+              shared_resources:
+                subnet_reference_list:
+                  - kind: subnet
+                    uuid: "{{ subnet_uuid }}"
+              resource_domain:
+                resources:
+                  - resource_type: CPU
+                    limit: 80
+                  - resource_type: MEMORY
+                    limit: 256
+                  - resource_type: STORAGE
+                    limit: 2048
+      register: created_project
+      when: existing_project.json.entities | length == 0
+
+    - name: Update project to include subnet if it already exists
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/api/nutanix/v3/projects/{{ existing_project.json.entities[0].metadata.uuid }}"
+        method: PUT
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+        body_format: json
+        body:
+          metadata: "{{ existing_project.json.entities[0].metadata }}"
+          spec: "{{ existing_project.json.entities[0].spec | combine({'resources': existing_project.json.entities[0].spec.resources | combine({'shared_resources': {'subnet_reference_list': [{'kind': 'subnet', 'uuid': subnet_uuid}]}})}) }}"
+      when:
+        - existing_project.json.entities | length > 0
+        - existing_project.json.entities[0].spec.resources.shared_resources.subnet_reference_list | map(attribute='uuid') | list is not containing subnet_uuid
+
+    - name: Retrieve configured directory services (LDAP)
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/PrismGateway/services/rest/v1/authconfig/directories"
+        method: GET
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+      register: existing_directories
+
+    - name: Flag whether the LDAP directory already exists
+      ansible.builtin.set_fact:
+        ldap_directory_exists: "{{ ldap_payload.name in (existing_directories.json.entities | default([]) | map(attribute='name') | list) }}"
+
+    - name: Create LDAP identity provider when needed
+      ansible.builtin.uri:
+        url: "https://{{ pc_host }}:{{ pc_port }}/PrismGateway/services/rest/v1/authconfig/directories"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "Basic {{ pc_auth }}"
+        validate_certs: "{{ pc_validate_certs }}"
+        body_format: json
+        body:
+          name: "{{ ldap_payload.name }}"
+          domain: "{{ ldap_payload.domain }}"
+          directoryUrl: "{{ ldap_payload.directory_url }}"
+          groupSearchType: "{{ ldap_group_search_type }}"
+          directoryType: "{{ ldap_directory_type }}"
+          connectionType: "LDAP"
+          serviceAccountUsername: "{{ ldap_payload.bind_username }}"
+          serviceAccountPassword: "{{ ldap_payload.bind_password }}"
+      when: not ldap_directory_exists
+
+    - name: Show summary
+      ansible.builtin.debug:
+        msg:
+          - "Project name: {{ project_name }}"
+          - "Customer: {{ customer_name }}"
+          - "Subnet UUID: {{ subnet_uuid }}"
+          - "Allocated pool: {{ ip_range_start }} - {{ ip_range_end }}"
+          - "LDAP directory ensured: {{ ldap_payload.name }}"
+
