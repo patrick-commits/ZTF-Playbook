@@ -37,10 +37,10 @@
     # Supply the AHV cluster UUID where the subnet should live.
     cluster_uuid: "{{ lookup('env', 'NTNX_CLUSTER_UUID') | default('00000000-0000-0000-0000-000000000000', true) }}"
 
-    # Update the VLAN ID (or pass --extra-vars "vlan_id=123").
+    # Update the VLAN ID (or pass --extra-vars "vlan_id=123" External as well as Flow , VLAN_ID Passtrough).
     vlan_id: "{{ lookup('env', 'NTNX_VLAN_ID') | default(110, true) | int }}"
 
-    # Optional: tie the project to a specific Prism Central VPC.
+    # Optional: tie the project to a specific Prism Central VPC .
     vpc_uuid: "{{ lookup('env', 'NTNX_VPC_UUID') | default('', true) }}"
 
     # CIDR for the subnet that will be created. Adjust or pass as an extra var.
